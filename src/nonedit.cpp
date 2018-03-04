@@ -11,7 +11,10 @@
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <SOIL/SOIL.h>
+
 #include "main.h"
+
 
 using namespace std;
 
@@ -30,7 +33,7 @@ GLFWwindow*initGLFW(int width, int height) {
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT,           GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    window = glfwCreateWindow(width, height, "Sample OpenGL 3.3 Application", NULL, NULL);
+    window = glfwCreateWindow(width, height, "3-D OpenGL", NULL, NULL);
 
     if (!window) {
         glfwTerminate();
@@ -222,4 +225,32 @@ void draw3DObject(struct VAO *vao) {
 
     // Draw the geometry !
     glDrawArrays(vao->PrimitiveMode, 0, vao->NumVertices); // Starting from vertex 0; 3 vertices total -> 1 triangle
+}
+
+
+// /* Create an OpenGL Texture from an image */
+GLuint createTexture (const char* filename)
+{
+    GLuint TextureID;
+    // Generate Texture Buffer
+    glGenTextures(1, &TextureID);
+    // All upcoming GL_TEXTURE_2D operations now have effect on our texture buffer
+    glBindTexture(GL_TEXTURE_2D, TextureID);
+    // Set our texture parameters
+    // Set texture wrapping to GL_REPEAT
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    // Set texture filtering (interpolation)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    // Load image and create OpenGL texture
+    int twidth, theight;
+    unsigned char* image = SOIL_load_image(filename, &twidth, &theight, 0, SOIL_LOAD_RGB);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, twidth, theight, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+    glGenerateMipmap(GL_TEXTURE_2D); // Generate MipMaps to use
+    SOIL_free_image_data(image); // Free the data read from file after creating opengl texture
+    glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture when done, so we won't accidentily mess it up
+
+    return TextureID;
 }

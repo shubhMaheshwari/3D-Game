@@ -20,7 +20,7 @@ double drag_oldx = -1, drag_oldy = -1;
 using namespace std;
 
 /* Executed when a regular key is pressed/released/held-down */
-/* Prefered for Keyboard events */
+/* Preferred for Keyboard events */
 void keyboard(GLFWwindow *window, int key, int scancode, int action, int mods) {
     // Function is called first on GLFW_PRESS.
 
@@ -84,4 +84,13 @@ void mouseButton(GLFWwindow *window, int button, int action, int mods) {
 
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
     // Do something
+    if(yoffset == 1)
+        screen_zoom *= 1.1;
+
+    else if(yoffset == -1)
+        screen_zoom /= 1.1;
+
+
+    reshapeWindow(window,1600,1600);
+
 }
