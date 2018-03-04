@@ -14,20 +14,32 @@ GLFWwindow *window;
 /**************************
 * Customizable functions *
 **************************/
+#define num_barrels 10
+#define num_rocks 40
 
 Monster monsters;
 Boat boat;
 Sea sea;
-Sphere sphere1;
+vector<Sphere> sphere;
+vector<Cube> barrels;
+Cube rocks[num_rocks];
+
 
 int boat_health = 100,score = 0;
 float screen_zoom = 2.0, screen_center_x = 0, screen_center_y = 0, screen_center_z;
 float eye_x,eye_y,eye_z;
 float target_x,target_y,target_z;
 float camera_rotation_angle = 95.0;
+// Check which camera view is present
 bool camera_follower = true,camera_top_view=false;
-bool sphere_hold = true;
+// Sphere hold to check whether fireball is on the boat
+// boost to activate boost once provided in a gift
+bool sphere_hold = false, boost_use = false;
+int boost = 1;
 
+
+// Wind Oscillations
+float wind = 0;
 
 Timer t60(1.0 / 60);
 
@@ -44,9 +56,9 @@ void draw() {
 		camera_rotation_angle = -boat.rotation + 95;
 
 
-		eye_x = target_x + 5*cos(camera_rotation_angle*M_PI/180.0f);
-		eye_y = target_y + 5;
-		eye_z = target_z + 5*sin(camera_rotation_angle*M_PI/180.0f);
+		eye_x = target_x + 10*cos(camera_rotation_angle*M_PI/180.0f);
+		eye_y = target_y + 10;
+		eye_z = target_z + 10*sin(camera_rotation_angle*M_PI/180.0f);
 
 	}
 
@@ -56,9 +68,9 @@ void draw() {
 		target_z = boat.position.z;
 
 
-		eye_x = target_x + 5*cos(camera_rotation_angle*M_PI/180.0f);
+		eye_x = target_x + 10*cos(camera_rotation_angle*M_PI/180.0f);
 		eye_y = target_y + 25;
-		eye_z = target_z + 5*sin(camera_rotation_angle*M_PI/180.0f);
+		eye_z = target_z + 10*sin(camera_rotation_angle*M_PI/180.0f);
 
 	}
 
@@ -94,8 +106,20 @@ void draw() {
 	// Scene render
 	sea.draw(VP);
 	boat.draw(VP);
-	sphere1.draw(VP);
 	monsters.draw(VP);
+
+	vector<Sphere> :: iterator s;
+	for (s = sphere.begin(); s < sphere.end(); ++s)
+		s->draw(VP);
+
+	vector<Cube> :: iterator b;
+	for (b = barrels.begin(); b < barrels.end(); ++b)
+		b->draw(VP);
+
+	for (int i = 0; i < num_rocks; ++i)
+		rocks[i].draw(VP);
+
+	
 }
 
 void tick_input(GLFWwindow *window) {
@@ -114,45 +138,52 @@ void tick_input(GLFWwindow *window) {
 	int space = glfwGetKey(window, GLFW_KEY_SPACE);
 	// Fireballs
 	int f   = glfwGetKey(window, GLFW_KEY_F);
+	// boost
+	int b   = glfwGetKey(window, GLFW_KEY_B);
 
 	// Camera Views
 	int t   = glfwGetKey(window, GLFW_KEY_T);
 	int u   = glfwGetKey(window, GLFW_KEY_U);
 
-	if(left){
-		camera_rotation_angle +=1;
-	}
+	// if(left){
+	// 	rect.position.x += 0.1;
+	// 	// camera_rotation_angle +=1;
+	// }
 
 
-	if(right){
-		camera_rotation_angle -=1;
-	}
+	// if(right){
+	// 	rect.position.x -= 0.1;
+
+	// 	// camera_rotation_angle -=1;
+	// }
 
 
 	// if(up){
-	//     sphere1.position.y += 0.01;
+	//     // boat.roll += 1;
+	// 	rect.position.y += 0.1;
 	// }
 
 
 	// if(down){
-	//     sphere1.position.y -= 0.01;
+	// 	rect.position.y -= 0.1;
+	//     // sphere1.position.y -= 0.01;
 	// }
 
 
 	if(w){
-		boat.speed -= 0.001;
+		boat.speed -= 0.005;
 	}
 
 	else if(s){
-		boat.speed += 0.001;
+		boat.speed += 0.005;
 	}
 
 	else {
 		if (boat.speed < 0) {
-			boat.speed += 0.001;
+			boat.speed += 0.002;
 		}
 		else if (boat.speed > 0) {
-			boat.speed -= 0.001;
+			boat.speed -= 0.002;
 		}
 		else {
 			boat.speed = 0;
@@ -183,16 +214,29 @@ void tick_input(GLFWwindow *window) {
 
 	}
 
-	if(f){
-		sphere_hold = false;
-		sphere1.speed = 0.3f - boat.speed;
-		sphere1.yspeed = 0.05f;
-		sphere1.rotation = -boat.rotation;
+	if(f && sphere_hold == false){
+		sphere_hold = true;
+		Sphere new_sphere = Sphere( boat.position.x ,boat.position.y + 1,boat.position.z -1, COLOR_BLACK);
+		new_sphere.speed = 1.0f - boat.speed;
+		new_sphere.yspeed = 0.05f;
+		new_sphere.rotation = -boat.rotation;
+
+		sphere.push_back(new_sphere);
 	}
 
 	if(space && boat.jumping == false){
 		boat.jumping = true;
-		boat.yspeed = 0.2f;
+		boat.yspeed = 0.3f;
+	}
+
+
+	// Boost 
+	if(b && boost > 0 & boost_use == true)
+	{
+		boost_use = false;
+		boost--;
+		boat.speed *= 2;
+		boat.yspeed += 0.3f;
 	}
 
 
@@ -200,20 +244,17 @@ void tick_input(GLFWwindow *window) {
 
 void tick_elements() {
 
+
 	monsters.tick(boat.position.x, boat.position.z);
 	
+	boat.tick(wind);
 	sea.tick();
-	boat.tick();
 
-	if(sphere_hold == true)
-		{
-		sphere1.position.x = boat.position.x;
-		sphere1.position.y = boat.position.y + 1;
-		sphere1.position.z = boat.position.z - 1;
-	}
-
-	else
-		sphere_hold = sphere1.tick();
+	// Move each ball and erase them if they have reached the bottom
+	vector<Sphere> :: iterator s;
+	for (s = sphere.begin(); s < sphere.end(); ++s)
+		if(s->tick())
+			sphere.erase(s);
 
 	sea.set_position(boat.position.x,boat.position.z);
 
@@ -231,6 +272,18 @@ void collision_function(){
 
 	// Check Monster collision with fireball or boat
 
+	// Collision with Barrels 
+	vector <Cube> ::iterator bar;
+	for(bar = barrels.begin(); bar < barrels.end(); bar++)
+	if(detect_collision(boat.bounding_box(),bar->bounding_box()))
+		{
+			score += 10;
+			printf("Hit a Barrel Score:%d\n",score);
+			barrels.erase(bar);
+			get_gift();
+		}
+
+
 	vector <Prism> :: iterator it;
 	for(it = monsters.prism.begin(); it < monsters.prism.end(); it++)
 	{
@@ -244,15 +297,41 @@ void collision_function(){
 
 	}
 
+	vector <Sphere> :: iterator s;
+	for(s = sphere.begin(); s < sphere.end(); ++s)
+	{
+		for(it = monsters.prism.begin(); it < monsters.prism.end(); it++)
+		if(detect_collision(s->bounding_box(),it->bounding_box()))
+			{
+				score += 100;
+				printf("Fireball Hit Score:%d\n",score);
+				monsters.kill(it);
+				get_gift();
+			}
 
-	for(it = monsters.prism.begin(); it < monsters.prism.end(); it++)
-	if(detect_collision(sphere1.bounding_box(),it->bounding_box()))
+
+
+
+		// No gifts if fireball hits the barrels
+		for(bar = barrels.begin(); bar < barrels.end(); bar++)
+		if(detect_collision(s->bounding_box(),bar->bounding_box()))
+			{
+				score += 10;
+				printf("Fireball hit Barrel Score:%d\n",score);
+				barrels.erase(bar);
+			}		
+
+	}
+
+	// Rock Collision
+	// With Boat
+	for (int i = 0; i < num_rocks; ++i)
+	if(detect_collision(boat.bounding_box(),rocks[i].bounding_box()))
 		{
-			score += 100;
-			printf("Fireball Hit Score:%d\n",score);
-			monsters.kill(it);
+			printf("Hit Rock Bottom\n");
+			boat.speed = -0.5*boat.speed;
+			boat_health -= 5;
 		}
-
 
 
 }
@@ -268,7 +347,16 @@ void initGL(GLFWwindow *window, int width, int height) {
 	monsters    = Monster(COLOR_RED);
 
 	sea        = Sea( 0, 0, COLOR_BLUE);
-	sphere1     = Sphere( 0, 1,-1, COLOR_BLACK);
+
+	// Barrels
+	for(int i=0;i<num_barrels;i++)
+		barrels.push_back(Cube(rand()%500 -250,0,rand()%500 -250,10,5,5,COLOR_BROWN));
+
+	// Rocks
+	for (int i = 0; i < num_rocks; ++i)
+		rocks[i] = Cube(5*(rand()%200 -100),0,5*(rand()%200 -100),rand()%30 + 10,rand()%30 ,rand()%30+ 10,COLOR_GREY);
+
+
 
 	// Create and compile our GLSL program from the shaders
 	programID = LoadShaders("Sample_GL.vert", "Sample_GL.frag");
@@ -302,14 +390,24 @@ int main(int argc, char **argv) {
 	initGL (window, width, height);
 
 	/* Draw in loop */
-	while (!glfwWindowShouldClose(window)) {
+	for (int t=0;!glfwWindowShouldClose(window);) {
 		// Process timers
 
 		if (t60.processTick()) {
 			// 60 fps
 			// OpenGL Draw commands
-			if(boat_health < 0)
+			if(boat_health <= 0)
 				break;
+
+			printf("%d\n",(t%180 -90) );
+			wind = (t%30 -15);
+			
+			// Time for things to recharge
+			if(t%50 == 0)
+			{	
+				sphere_hold = false;
+				boost_use = true;
+			}
 
 
 
@@ -328,6 +426,8 @@ int main(int argc, char **argv) {
 			
 			reshapeWindow (window, width, height);
 
+		// For stable time flow we update time here
+		t++;
 		}
 
 		// Poll for Keyboard and mouse events
@@ -338,10 +438,37 @@ int main(int argc, char **argv) {
 }
 
 bool detect_collision(bounding_box_t a, bounding_box_t b) {
-	// printf("%lf\n", (abs(a.y - b.y) * 2 - (a.height + b.height)));
-	return (abs(a.x - b.x) * 2 < (a.width + b.width)) &&
-		   (abs(a.y - b.y) * 2 < (a.height + b.height)) &&
-		   (abs(a.z - b.z) * 2 < (a.depth + b.depth));
+	return (abs(a.x - b.x) * 2 <= (a.width + b.width)) &&
+		   (abs(a.y - b.y) * 2 <= (a.height + b.height)) &&
+		   (abs(a.z - b.z) * 2 <= (a.depth + b.depth));
 
+
+}
+
+void get_gift(){
+	int ind = rand()%3;
+	// 3 types of gift
+
+	// Get health 
+	if(ind == 0)
+		{
+			boat_health += 10;
+			printf("Health increased:%d\n",boat_health);
+
+		}
+
+	// 
+	else if (ind == 1)
+		{
+			score += 50;
+			printf("Score Bonus:%d\n",score);
+
+		}		
+
+	else{
+		printf("Boost Received\n");
+		boost++;
+		
+	}	
 
 }

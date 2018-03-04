@@ -4,7 +4,7 @@
 #ifndef MONSTER_H
 #define MONSTER_H
 
-#define num_monsters 20
+#define num_monsters 40
 
 class Monster {
 public:

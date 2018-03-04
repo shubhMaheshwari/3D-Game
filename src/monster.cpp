@@ -5,7 +5,7 @@ using namespace std;
 Monster::Monster(color_t color) {
 
     for(int i=0;i<num_monsters;i++)
-        this->prism.push_back(Prism(rand()%100 -50 ,rand()%100 -100, color));
+        this->prism.push_back(Prism(rand()%400 - 200 ,rand()%200 -200, color));
 
 }
 

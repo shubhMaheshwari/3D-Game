@@ -74,7 +74,9 @@ struct bounding_box_t {
     float depth;
 };
 
+// main.cpp
 bool detect_collision(bounding_box_t a, bounding_box_t b);
+void get_gift();
 
 extern float screen_zoom, screen_center_x, screen_center_y;
 extern int boat_health,score;
@@ -84,7 +86,9 @@ extern const color_t COLOR_ORANGE;
 extern const color_t COLOR_GREEN;
 extern const color_t COLOR_BLUE;
 extern const color_t COLOR_BROWN;
+extern const color_t COLOR_GREY;
 extern const color_t COLOR_BLACK;
+extern const color_t COLOR_WHITE;
 extern const color_t COLOR_BACKGROUND;
 
 #endif

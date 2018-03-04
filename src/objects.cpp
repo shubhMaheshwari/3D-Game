@@ -61,6 +61,7 @@ Cube::Cube(float x, float y,float z, float width , float height , float depth,  
         width/2.0f ,-height/2.0f , depth/2.0f
     };
 
+
     this->object = create3DObject(GL_TRIANGLES, 12*3, vertex_buffer_data, color, GL_FILL);
 }
 
@@ -89,7 +90,7 @@ void Cube::tick() {
 bounding_box_t Cube::bounding_box() {
     float x = this->position.x, y = this->position.y, z = this->position.z;
     float width = this->dimensions.x, height = this->dimensions.y, depth = this->dimensions.z;
-    bounding_box_t bbox = { x, y,z, width/2.0, height/2.0, depth/2.0 };
+    bounding_box_t bbox = { x, y,z, width, height, depth };
     return bbox;
 }
 
@@ -102,21 +103,21 @@ Prism::Prism(float x,float z,  color_t color) {
     // Our vertices. Three consecutive floats give a 3D vertex; Three consecutive vertices give a triangle.
     // A Prism has 6 faces with 2 triangles each, so this makes 6*2=12 triangles, and 12*3 vertices
     GLfloat vertex_buffer_data[] = {
-       0.0f, 3.0f,0.0f,
-       -1.0f,0.0f,1.0f,
-       -1.0f,0.0f,-1.0f,
+       0.0f, 6.0f,0.0f,
+       -2.0f,0.0f,2.0f,
+       -2.0f,0.0f,-2.0f,
 
-       0.0f, 3.0f,0.0f,
-       -1.0f,0.0f,1.0f,
-        1.0f,0.0f,1.0f,
+       0.0f, 6.0f,0.0f,
+       -2.0f,0.0f,2.0f,
+        2.0f,0.0f,2.0f,
 
-        0.0f, 3.0f,0.0f,
-        1.0f,0.0f,-1.0f,
-       -1.0f,0.0f,-1.0f,
+        0.0f, 6.0f,0.0f,
+        2.0f,0.0f,-2.0f,
+       -2.0f,0.0f,-2.0f,
 
-       0.0f, 3.0f,0.0f,
-       1.0f,0.0f,-1.0f,
-       1.0f,0.0f,1.0f,
+       0.0f, 6.0f,0.0f,
+       2.0f,0.0f,-2.0f,
+       2.0f,0.0f,2.0f,
     };
 
     this->object = create3DObject(GL_TRIANGLES, 4*3, vertex_buffer_data, color, GL_FILL);
@@ -159,7 +160,7 @@ void Prism::tick(float x,float z) {
 
 bounding_box_t Prism::bounding_box() {
     float x = this->position.x, y = this->position.y, z = this->position.z;
-    bounding_box_t bbox = { x, y + 1.5,z, 1, 1.5, 1 };
+    bounding_box_t bbox = { x, y + 3.0,z, 2, 3, 2 };
     return bbox;
 }
 
@@ -199,6 +200,7 @@ Sphere::Sphere(float x, float y, float z, color_t color) {
 
 void Sphere::draw(glm::mat4 VP) {
     Matrices.model = glm::mat4(1.0f);
+    // Rotate about y axis and not center of object
     glm::mat4 translate = glm::translate (this->position);    // glTranslatef
     glm::mat4 rotate    = glm::rotate((float) (this->rotation * M_PI / 180.0f), glm::vec3(1, 0, 0));
     // No need as coords centered at 0, 0, 0 of Sphere arouund which we waant to rotate
@@ -229,5 +231,57 @@ bool Sphere::tick() {
 bounding_box_t Sphere::bounding_box() {
     float x = this->position.x, y = this->position.y, z = this->position.z;
     bounding_box_t bbox = { x, y,z, this->radius, this->radius, this->radius };
+    return bbox;
+}
+
+
+// Rectangle for sail
+
+
+Rectangle::Rectangle(float x, float y, float z,float length, float height, color_t color) {
+    this->position = glm::vec3(x, y, z);
+    this->rotation = 0;
+    this->dimensions = glm::vec2(length,height);    
+    // Our vertices. Three consecutive floats give a 3D vertex; Three consecutive vertices give a triangle.
+    // A Rectangle has 6 faces with 2 triangles each, so this makes 6*2=12 triangles, and 12*3 vertices
+    GLfloat vertex_buffer_data[] = {
+         0.0f,height/2.0f, length/2.0f,
+         0.0f,height/2.0f, -length/2.0f,
+         0.0f,-height/2.0f,-length/2.0f,
+
+        0.0f ,height/2.0f,  length/2.0f,
+        0.0f,-height/2.0f, length/2.0f,
+         0.0f,-height/2.0f,-length/2.0f,
+
+
+    };
+ 
+    this->object = create3DObject(GL_TRIANGLES, 2*3, vertex_buffer_data, color, GL_FILL);
+}
+
+void Rectangle::draw(glm::mat4 VP) {
+    Matrices.model = glm::mat4(1.0f);
+
+    glm::vec3 translate_vec = this->position;
+    translate_vec.z -= this->dimensions.x/2.0f;
+
+
+    glm::mat4 translate = glm::translate (translate_vec);    // glTranslatef
+    glm::mat4 rotate    = glm::rotate((float) (this->rotation * M_PI / 180.0f), glm::vec3(0, 1, 0));
+    glm::mat4 neg_translate = glm::translate (-translate_vec);    // glTranslatef
+
+    Matrices.model *= (translate * rotate)*neg_translate;
+    glm::mat4 MVP = VP * Matrices.model;
+    glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
+    draw3DObject(this->object);
+}
+
+void Rectangle::set_position(float x, float y,float z) {
+    this->position = glm::vec3(x, y, z);
+}
+
+bounding_box_t Rectangle::bounding_box() {
+    float x = this->position.x, y = this->position.y, z = this->position.z;
+    bounding_box_t bbox = { x, y,z, this->dimensions.x, this->dimensions.y, 0};
     return bbox;
 }
