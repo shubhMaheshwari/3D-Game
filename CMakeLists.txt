@@ -24,13 +24,13 @@ if (APPLE)
 endif()
 
 
-pkg_check_modules(AO REQUIRED ao)
-include_directories(${AO_INCLUDE_DIRS})
-target_link_libraries (${PROJECT_NAME} ${AO_LIBRARIES})
+# pkg_check_modules(AO REQUIRED ao)
+# include_directories(${AO_INCLUDE_DIRS})
+# target_link_libraries (${PROJECT_NAME} ${AO_LIBRARIES})
 
-pkg_check_modules(LIBMPG123 REQUIRED libmpg123)
-include_directories(${LIBMPG123_INCLUDE_DIRS})
-target_link_libraries (${PROJECT_NAME} ${LIBMPG123_LIBRARIES})
+# pkg_check_modules(LIBMPG123 REQUIRED libmpg123)
+# include_directories(${LIBMPG123_INCLUDE_DIRS})
+# target_link_libraries (${PROJECT_NAME} ${LIBMPG123_LIBRARIES})
 
 configure_file(src/Sample_GL.vert Sample_GL.vert COPYONLY)
 configure_file(src/Sample_GL.frag Sample_GL.frag COPYONLY)
