@@ -13,6 +13,7 @@
 
 #include <SOIL/SOIL.h>
 
+
 #include "main.h"
 
 
@@ -28,6 +29,7 @@ GLFWwindow*initGLFW(int width, int height) {
         // exit(EXIT_FAILURE);
     }
 
+
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR,                 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR,                 3);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT,           GL_TRUE);
@@ -40,15 +42,26 @@ GLFWwindow*initGLFW(int width, int height) {
         // exit(EXIT_FAILURE);
     }
 
+
+
     glfwMakeContextCurrent(window);
+
+
+
     // Initialize GLEW, Needed in Core profile
     glewExperimental = GL_TRUE;
+
     GLenum err = glewInit();
+
     if (err != GLEW_OK) {
         cout << "Error: Failed to initialise GLEW : " << glewGetErrorString(err) << endl;
         exit (1);
     }
+
+
     glfwSwapInterval(1);
+
+
 
     /* --- register callbacks with GLFW --- */
 
@@ -68,6 +81,8 @@ GLFWwindow*initGLFW(int width, int height) {
     /* Register function to handle mouse click */
     glfwSetMouseButtonCallback(window, mouseButton); // mouse button clicks
     glfwSetScrollCallback(window, scroll_callback);
+
+
 
     return window;
 }
@@ -190,7 +205,7 @@ struct VAO *create3DObject(GLenum primitive_mode, int numVertices, const GLfloat
 }
 
 /* Generate VAO, VBOs and return VAO handle - Common Color for all vertices */
-struct VAO *create3DObject(GLenum primitive_mode, int numVertices, const GLfloat *vertex_buffer_data, const GLfloat red, const GLfloat green, const GLfloat blue, GLenum fill_mode) {
+VAO *create3DObject(GLenum primitive_mode, int numVertices, const GLfloat *vertex_buffer_data, const GLfloat red, const GLfloat green, const GLfloat blue, GLenum fill_mode) {
     GLfloat *color_buffer_data = new GLfloat[3 * numVertices];
     for (int i = 0; i < numVertices; i++) {
         color_buffer_data[3 * i]     = red;
@@ -203,6 +218,47 @@ struct VAO *create3DObject(GLenum primitive_mode, int numVertices, const GLfloat
 
 struct VAO *create3DObject(GLenum primitive_mode, int numVertices, const GLfloat *vertex_buffer_data, const color_t color, GLenum fill_mode) {
     return create3DObject(primitive_mode, numVertices, vertex_buffer_data, color.r / 256.0, color.g / 256.0, color.b / 256.0, fill_mode);
+}
+
+// Create a textured body
+struct VAO* create3DTexturedObject(GLenum primitive_mode, int numVertices, const GLfloat* vertex_buffer_data, const GLfloat* texture_buffer_data, GLuint textureID, GLenum fill_mode)
+{
+    struct VAO* vao = new struct VAO;
+    vao->PrimitiveMode = primitive_mode;
+    vao->NumVertices = numVertices;
+    vao->FillMode = fill_mode;
+    vao->TextureID = textureID;
+
+    // Create Vertex Array Object
+    // Should be done after CreateWindow and before any other GL calls
+    glGenVertexArrays(1, &(vao->VertexArrayID)); // VAO
+    glGenBuffers (1, &(vao->VertexBuffer)); // VBO - vertices
+    glGenBuffers (1, &(vao->TextureBuffer));  // VBO - textures
+
+    glBindVertexArray (vao->VertexArrayID); // Bind the VAO
+    glBindBuffer (GL_ARRAY_BUFFER, vao->VertexBuffer); // Bind the VBO vertices
+    glBufferData (GL_ARRAY_BUFFER, 3*numVertices*sizeof(GLfloat), vertex_buffer_data, GL_STATIC_DRAW); // Copy the vertices into VBO
+    glVertexAttribPointer(
+                          0,                  // attribute 0. Vertices
+                          3,                  // size (x,y,z)
+                          GL_FLOAT,           // type
+                          GL_FALSE,           // normalized?
+                          0,                  // stride
+                          (void*)0            // array buffer offset
+                          );
+
+    glBindBuffer (GL_ARRAY_BUFFER, vao->TextureBuffer); // Bind the VBO textures
+    glBufferData (GL_ARRAY_BUFFER, 2*numVertices*sizeof(GLfloat), texture_buffer_data, GL_STATIC_DRAW);  // Copy the vertex colors
+    glVertexAttribPointer(
+                          2,                  // attribute 2. Textures
+                          2,                  // size (s,t)
+                          GL_FLOAT,           // type
+                          GL_FALSE,           // normalized?
+                          0,                  // stride
+                          (void*)0            // array buffer offset
+                          );
+
+    return vao;
 }
 
 /* Render the VBOs handled by VAO */
@@ -227,88 +283,61 @@ void draw3DObject(struct VAO *vao) {
     glDrawArrays(vao->PrimitiveMode, 0, vao->NumVertices); // Starting from vertex 0; 3 vertices total -> 1 triangle
 }
 
-GLuint loadBMP_custom(const char * imagepath){
+// Draw the textured object
+void draw3DTexturedObject (struct VAO* vao)
+{
+    // Change the Fill Mode for this object
+    glPolygonMode (GL_FRONT_AND_BACK, vao->FillMode);
 
-    printf("Reading image %s\n", imagepath);
+    // Bind the VAO to use
+    glBindVertexArray (vao->VertexArrayID);
 
-    // Data read from the header of the BMP file
-    unsigned char header[54];
-    unsigned int dataPos;
-    unsigned int imageSize;
-    unsigned int width, height;
-    // Actual RGB data
-    unsigned char * data;
+    // Enable Vertex Attribute 0 - 3d Vertices
+    glEnableVertexAttribArray(0);
+    // Bind the VBO to use
+    glBindBuffer(GL_ARRAY_BUFFER, vao->VertexBuffer);
 
-    // Open the file
-    FILE * file = fopen(imagepath,"rb");
-    if (!file){
-        printf("%s could not be opened. Are you in the right directory ? Don't forget to read the FAQ !\n", imagepath);
-        getchar();
-        return 0;
-    }
+    // Bind Textures using texture units
+    glBindTexture(GL_TEXTURE_2D, vao->TextureID);
 
-    // Read the header, i.e. the 54 first bytes
+    // Enable Vertex Attribute 2 - Texture
+    glEnableVertexAttribArray(2);
+    // Bind the VBO to use
+    glBindBuffer(GL_ARRAY_BUFFER, vao->TextureBuffer);
 
-    // If less than 54 bytes are read, problem
-    if ( fread(header, 1, 54, file)!=54 ){ 
-        printf("Not a correct BMP file\n");
-        fclose(file);
-        return 0;
-    }
-    // A BMP files always begins with "BM"
-    if ( header[0]!='B' || header[1]!='M' ){
-        printf("Not a correct BMP file\n");
-        fclose(file);
-        return 0;
-    }
-    // Make sure this is a 24bpp file
-    if ( *(int*)&(header[0x1E])!=0  )         {printf("Not a correct BMP file\n");    fclose(file); return 0;}
-    if ( *(int*)&(header[0x1C])!=24 )         {printf("Not a correct BMP file\n");    fclose(file); return 0;}
+    // Draw the geometry !
+    glDrawArrays(vao->PrimitiveMode, 0, vao->NumVertices); // Starting from vertex 0; 3 vertices total -> 1 triangle
 
-    // Read the information about the image
-    dataPos    = *(int*)&(header[0x0A]);
-    imageSize  = *(int*)&(header[0x22]);
-    width      = *(int*)&(header[0x12]);
-    height     = *(int*)&(header[0x16]);
+    // Unbind Textures to be safe
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
 
-    // Some BMP files are misformatted, guess missing information
-    if (imageSize==0)    imageSize=width*height*3; // 3 : one byte for each Red, Green and Blue component
-    if (dataPos==0)      dataPos=54; // The BMP header is done that way
-
-    // Create a buffer
-    data = new unsigned char [imageSize];
-
-    // Read the actual data from the file into the buffer
-    fread(data,1,imageSize,file);
-
-    // Everything is in memory now, the file can be closed.
-    fclose (file);
-
-    // Create one OpenGL texture
-    GLuint textureID;
-    glGenTextures(1, &textureID);
-    
-    // "Bind" the newly created texture : all future texture functions will modify this texture
-    glBindTexture(GL_TEXTURE_2D, textureID);
-
-    // Give the image to OpenGL
-    glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data);
-
-    // OpenGL has now copied the data. Free our own version
-    delete [] data;
-
-    // Poor filtering, or ...
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); 
-
-    // ... nice trilinear filtering ...
+/* Create an OpenGL Texture from an image */
+GLuint createTexture (const char* filename)
+{
+    GLuint TextureID;
+    // Generate Texture Buffer
+    glGenTextures(1, &TextureID);
+    // All upcoming GL_TEXTURE_2D operations now have effect on our texture buffer
+    glBindTexture(GL_TEXTURE_2D, TextureID);
+    // Set our texture parameters
+    // Set texture wrapping to GL_REPEAT
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    // ... which requires mipmaps. Generate them automatically.
-    glGenerateMipmap(GL_TEXTURE_2D);
+    // Set texture filtering (interpolation)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    // Return the ID of the texture we just created
-    return textureID;
+    // Load image and create OpenGL texture
+    int twidth, theight;
+    unsigned char* image = SOIL_load_image(filename, &twidth, &theight, 0, SOIL_LOAD_RGB);
+    printf("SOIL Status:%s\n",SOIL_last_result());
+    
+    // Check if soil loaded the file
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, twidth, theight, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+    glGenerateMipmap(GL_TEXTURE_2D); // Generate MipMaps to use
+    SOIL_free_image_data(image); // Free the data read from file after creating opengl texture
+    glBindTexture(GL_TEXTURE_2D, 0); // Unbind texture when done, so we won't accidentily mess it up
+
+    return TextureID;
 }

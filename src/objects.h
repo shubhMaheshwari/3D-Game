@@ -20,6 +20,22 @@ private:
     VAO *object;
 };
 
+class CubeTextured {
+public:
+    CubeTextured() {}
+    CubeTextured(float x, float y,float z,float width , float height , float depth,  GLuint textureID);
+    glm::vec3 position;
+    glm::vec3 speed;
+    glm::vec3 dimensions;
+    float rotation;
+    void draw(glm::mat4 VP);
+    void set_position(float x, float y);
+    void tick();
+    bounding_box_t bounding_box();
+private:
+    VAO *object;
+};
+
 
 class Prism {
 public:
@@ -59,7 +75,7 @@ private:
 class Rectangle {
 public:
     Rectangle() {}
-    Rectangle(float x, float y,float z,float length, float height, color_t color);
+    Rectangle(float x, float y,float z,float length, float height, GLuint textureID);
     glm::vec3 position;
     glm::vec2 dimensions;
     float rotation;

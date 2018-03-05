@@ -17,10 +17,27 @@ Sea::Sea(float x, float y, color_t color) {
         -1000.0,0.0, 1000.0
     };
 
-    this->object = create3DObject(GL_TRIANGLES, 2*3, vertex_buffer_data, color, GL_FILL);
+    GLfloat texture_buffer_data [] = {
+        0,100, // TexCoord 1000 - bot left
+        100,100, // TexCoord 100 - bot right
+        100,0, // TexCoord 3 - top right
+
+        100,0, // TexCoord 3 - top right
+        0,0, // TexCoord 4 - top left
+        0,100  // TexCoord 1 - bot left
+    };
+
+    GLuint textureID = createTexture("../images/sea1.jpg");
+    this->object = create3DTexturedObject(GL_TRIANGLES, 6, vertex_buffer_data, texture_buffer_data, textureID, GL_FILL);
+
+
 }
 
 void Sea::draw(glm::mat4 VP) {
+
+    glUseProgram (textureProgramID);
+
+    
     Matrices.model = glm::mat4(1.0f);
     glm::mat4 translate = glm::translate (this->position);    // glTranslatef
     glm::mat4 rotate    = glm::rotate((float) (this->rotation * M_PI / 180.0f), glm::vec3(1, 0, 0));
@@ -28,8 +45,8 @@ void Sea::draw(glm::mat4 VP) {
     // rotate          = rotate * glm::translate(glm::vec3(0, -0.6, 0));
     Matrices.model *= (translate * rotate);
     glm::mat4 MVP = VP * Matrices.model;
-    glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
-    draw3DObject(this->object);
+    glUniformMatrix4fv(Matrices.TexMatrixID, 1, GL_FALSE, &MVP[0][0]);
+    draw3DTexturedObject(this->object);
 }
 
 void Sea::set_position(float x, float z) {
@@ -48,7 +65,7 @@ void Sea::tick() {
     else if (this->position.y > 0.25)
         this->position.y = 0.25;
 
-    else if (this->position.y < -.025)
+    else if (this->position.y < -0.25)
         this->position.y = -0.25;
 
     else

@@ -67,8 +67,10 @@ void mouseButton(GLFWwindow *window, int button, int action, int mods) {
     case GLFW_MOUSE_BUTTON_LEFT:
         if (action == GLFW_PRESS) {
             // Do something
+           clk = true;
             return;
         } else if (action == GLFW_RELEASE) {
+            clk = false;
             // Do something
         }
         break;
@@ -93,4 +95,28 @@ void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
 
     reshapeWindow(window,1600,1600);
 
+}
+
+float prev_xpos=0.0f,prev_ypos=0.0f;
+void mouseuse(GLFWwindow *window,int fbwidth, int fbheight,float* eye_x, float* eye_z)
+{
+    double xpos,ypos;
+    glfwGetCursorPos(window,&xpos,&ypos);
+    xpos=(xpos/fbwidth)*8-2;
+    ypos=(ypos/fbheight)*8-2;
+    float ox=(float)xpos-prev_xpos;
+    float oy=(float)ypos-prev_ypos;
+    //cout<<clk;
+    if(clk)
+    {
+        *eye_x +=ox;
+        *eye_z +=oy;
+
+        // cout<<camx<<" "<<camy<<" "<<fbheight<<" "<<fbwidth<<"\n";
+        //clk=0;
+    }
+
+    prev_xpos = xpos;
+    prev_ypos = ypos;
+     
 }

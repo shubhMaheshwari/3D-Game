@@ -14,14 +14,14 @@ public:
     float roll;
     void draw(glm::mat4 VP);
     void set_position(float x, float y);
-    void tick(float wind);
+    void tick();
     double speed;
     double yspeed;
     bool jumping;
     bounding_box_t bounding_box();
 
 
-    Cube plank[6];
+    CubeTextured plank[6];
     Rectangle sail;
 };
 

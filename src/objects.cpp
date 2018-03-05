@@ -66,6 +66,10 @@ Cube::Cube(float x, float y,float z, float width , float height , float depth,  
 }
 
 void Cube::draw(glm::mat4 VP) {
+
+    glUseProgram (ProgramID);
+
+
     Matrices.model = glm::mat4(1.0f);
     glm::mat4 translate = glm::translate (this->position);    // glTranslatef
     glm::mat4 rotate    = glm::rotate((float) (this->rotation * M_PI / 180.0f), glm::vec3(0, 1, 0));
@@ -88,6 +92,155 @@ void Cube::tick() {
 }
 
 bounding_box_t Cube::bounding_box() {
+    float x = this->position.x, y = this->position.y, z = this->position.z;
+    float width = this->dimensions.x, height = this->dimensions.y, depth = this->dimensions.z;
+    bounding_box_t bbox = { x, y,z, width, height, depth };
+    return bbox;
+}
+
+
+CubeTextured::CubeTextured(float x, float y,float z, float width , float height , float depth,  GLuint textureID) {
+    this->position = glm::vec3(x, y, z);
+    this->rotation = 0;
+    this->speed = glm::vec3(0, 0, 0);
+    this->dimensions  = glm::vec3(width,height,depth);
+    // depth = 6;
+    // Our vertices. Three consecutive floats give a 3D vertex; Three consecutive vertices give a triangle.
+    // A cubeTextured has 6 faces with 2 triangles each, so this makes 6*2=12 triangles, and 12*3 vertices
+    GLfloat vertex_buffer_data[] = {
+        -width/2.0f ,-height/2.0f ,-depth/2.0f, // triangle 1 : begin
+        -width/2.0f ,-height/2.0f , depth/2.0f,
+        -width/2.0f , height/2.0f , depth/2.0f, // triangle 1 : end
+
+        width/2.0f , height/2.0f ,-depth/2.0f, // triangle 2 : begin
+        -width/2.0f ,-height/2.0f ,-depth/2.0f,
+        -width/2.0f , height/2.0f ,-depth/2.0f, // triangle 2 : end
+
+        width/2.0f ,-height/2.0f , depth/2.0f,
+        -width/2.0f ,-height/2.0f ,-depth/2.0f,
+        width/2.0f ,-height/2.0f ,-depth/2.0f,
+
+        width/2.0f , height/2.0f ,-depth/2.0f,
+        width/2.0f ,-height/2.0f ,-depth/2.0f,
+        -width/2.0f ,-height/2.0f ,-depth/2.0f,
+
+        -width/2.0f ,-height/2.0f ,-depth/2.0f,
+        -width/2.0f , height/2.0f , depth/2.0f,
+        -width/2.0f , height/2.0f ,-depth/2.0f,
+
+        width/2.0f ,-height/2.0f , depth/2.0f,
+        -width/2.0f ,-height/2.0f , depth/2.0f,
+        -width/2.0f ,-height/2.0f ,-depth/2.0f,
+
+        -width/2.0f , height/2.0f , depth/2.0f,
+        -width/2.0f ,-height/2.0f , depth/2.0f,
+        width/2.0f ,-height/2.0f , depth/2.0f,
+
+        width/2.0f , height/2.0f , depth/2.0f,
+        width/2.0f ,-height/2.0f ,-depth/2.0f,
+        width/2.0f , height/2.0f ,-depth/2.0f,
+
+        width/2.0f ,-height/2.0f ,-depth/2.0f,
+        width/2.0f , height/2.0f , depth/2.0f,
+        width/2.0f ,-height/2.0f , depth/2.0f,
+
+        width/2.0f , height/2.0f , depth/2.0f,
+        width/2.0f , height/2.0f ,-depth/2.0f,
+        -width/2.0f , height/2.0f ,-depth/2.0f,
+
+        width/2.0f , height/2.0f , depth/2.0f,
+        -width/2.0f , height/2.0f ,-depth/2.0f,
+        -width/2.0f , height/2.0f , depth/2.0f,
+
+        width/2.0f , height/2.0f , depth/2.0f,
+        -width/2.0f , height/2.0f , depth/2.0f,
+        width/2.0f ,-height/2.0f , depth/2.0f
+    };
+
+    GLfloat texture_buffer_data [] = {
+        0,1, // TexCoord 1 - bot left
+        1,1, // TexCoord 2 - bot right
+        1,0, // TexCoord 3 - top right
+
+        1,0, // TexCoord 3 - top right
+        0,0, // TexCoord 4 - top left
+        0,1,  // TexCoord 1 - bot left
+
+        0,1, // TexCoord 1 - bot left
+        1,1, // TexCoord 2 - bot right
+        1,0, // TexCoord 3 - top right
+
+        1,0, // TexCoord 3 - top right
+        0,0, // TexCoord 4 - top left
+        0,1,  // TexCoord 1 - bot left
+
+        0,1, // TexCoord 1 - bot left
+        1,1, // TexCoord 2 - bot right
+        1,0, // TexCoord 3 - top right
+
+        1,0, // TexCoord 3 - top right
+        0,0, // TexCoord 4 - top left
+        0,1,  // TexCoord 1 - bot left
+
+
+        0,1, // TexCoord 1 - bot left
+        1,1, // TexCoord 2 - bot right
+        1,0, // TexCoord 3 - top right
+
+        1,0, // TexCoord 3 - top right
+        0,0, // TexCoord 4 - top left
+        0,1,  // TexCoord 1 - bot left
+
+
+        0,1, // TexCoord 1 - bot left
+        1,1, // TexCoord 2 - bot right
+        1,0, // TexCoord 3 - top right
+
+        1,0, // TexCoord 3 - top right
+        0,0, // TexCoord 4 - top left
+        0,1,  // TexCoord 1 - bot left
+
+
+        0,1, // TexCoord 1 - bot left
+        1,1, // TexCoord 2 - bot right
+        1,0, // TexCoord 3 - top right
+
+        1,0, // TexCoord 3 - top right
+        0,0, // TexCoord 4 - top left
+        0,1  // TexCoord 1 - bot left
+
+    };
+
+    this->object = create3DTexturedObject(GL_TRIANGLES, 12*3, vertex_buffer_data, texture_buffer_data, textureID, GL_FILL);
+}
+
+void CubeTextured::draw(glm::mat4 VP) {
+
+    glUseProgram (textureProgramID);
+
+
+    Matrices.model = glm::mat4(1.0f);
+    glm::mat4 translate = glm::translate (this->position);    // glTranslatef
+    glm::mat4 rotate    = glm::rotate((float) (this->rotation * M_PI / 180.0f), glm::vec3(0, 1, 0));
+    // No need as coords centered at 0, 0, 0 of cubeTextured arouund which we waant to rotate
+    // rotate          = rotate * glm::translate(glm::vec3(0, -0.6, 0));
+    Matrices.model *= (translate * rotate);
+    glm::mat4 MVP = VP * Matrices.model;
+    glUniformMatrix4fv(Matrices.TexMatrixID, 1, GL_FALSE, &MVP[0][0]);
+    draw3DTexturedObject(this->object);
+}
+
+void CubeTextured::set_position(float x, float y) {
+    this->position = glm::vec3(x, y, 0);
+}
+
+void CubeTextured::tick() {
+    // this->rotation += speed;
+    // this->position.x -= speed;
+    // this->position.y -= speed;
+}
+
+bounding_box_t CubeTextured::bounding_box() {
     float x = this->position.x, y = this->position.y, z = this->position.z;
     float width = this->dimensions.x, height = this->dimensions.y, depth = this->dimensions.z;
     bounding_box_t bbox = { x, y,z, width, height, depth };
@@ -127,6 +280,9 @@ Prism::Prism(float x,float z,  color_t color) {
 // Define Prism
 
 void Prism::draw(glm::mat4 VP) {
+
+    glUseProgram (ProgramID);
+    
     Matrices.model = glm::mat4(1.0f);
     glm::mat4 translate = glm::translate (this->position);    // glTranslatef
     glm::mat4 rotate    = glm::rotate((float) (this->rotation * M_PI / 180.0f), glm::vec3(0, 1, 0));
@@ -144,17 +300,18 @@ void Prism::set_position(float x, float y) {
 
 void Prism::tick(float x,float z) {
 
+    // Adding Randomization for fun
 
     if(this->position.z > z)
-        this->position.z  -= speed;
+        this->position.z  -= speed ;
     else
         this->position.z  += speed;
 
 
     if(this->position.x > x)
-        this->position.x  -= speed;
+        this->position.x  -= speed + 0.02*(rand()%4);
     else
-        this->position.x  += speed;  
+        this->position.x  += speed - 0.02*(rand()%4);  
 
 }
 
@@ -199,6 +356,9 @@ Sphere::Sphere(float x, float y, float z, color_t color) {
 }
 
 void Sphere::draw(glm::mat4 VP) {
+
+    glUseProgram (ProgramID);
+    
     Matrices.model = glm::mat4(1.0f);
     // Rotate about y axis and not center of object
     glm::mat4 translate = glm::translate (this->position);    // glTranslatef
@@ -238,7 +398,7 @@ bounding_box_t Sphere::bounding_box() {
 // Rectangle for sail
 
 
-Rectangle::Rectangle(float x, float y, float z,float length, float height, color_t color) {
+Rectangle::Rectangle(float x, float y, float z,float length, float height, GLuint textureID) {
     this->position = glm::vec3(x, y, z);
     this->rotation = 0;
     this->dimensions = glm::vec2(length,height);    
@@ -255,11 +415,25 @@ Rectangle::Rectangle(float x, float y, float z,float length, float height, color
 
 
     };
+
+    GLfloat texture_buffer_data [] = {
+        0,1, // TexCoord 1 - bot left
+        1,1, // TexCoord 2 - bot right
+        1,0, // TexCoord 3 - top right
+
+        1,0, // TexCoord 3 - top right
+        0,0, // TexCoord 4 - top left
+        0,1  // TexCoord 1 - bot left
+    };
  
-    this->object = create3DObject(GL_TRIANGLES, 2*3, vertex_buffer_data, color, GL_FILL);
+    this->object = create3DTexturedObject(GL_TRIANGLES, 6, vertex_buffer_data, texture_buffer_data, textureID, GL_FILL);
+    
 }
 
 void Rectangle::draw(glm::mat4 VP) {
+
+    glUseProgram(textureProgramID);
+
     Matrices.model = glm::mat4(1.0f);
 
     glm::vec3 translate_vec = this->position;
@@ -268,12 +442,12 @@ void Rectangle::draw(glm::mat4 VP) {
 
     glm::mat4 translate = glm::translate (translate_vec);    // glTranslatef
     glm::mat4 rotate    = glm::rotate((float) (this->rotation * M_PI / 180.0f), glm::vec3(0, 1, 0));
-    glm::mat4 neg_translate = glm::translate (-translate_vec);    // glTranslatef
+    glm::mat4 neg_translate = glm::translate (glm::vec3(0,0,0));    // glTranslatef
 
     Matrices.model *= (translate * rotate)*neg_translate;
     glm::mat4 MVP = VP * Matrices.model;
-    glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
-    draw3DObject(this->object);
+    glUniformMatrix4fv(Matrices.TexMatrixID, 1, GL_FALSE, &MVP[0][0]);
+    draw3DTexturedObject(this->object);
 }
 
 void Rectangle::set_position(float x, float y,float z) {

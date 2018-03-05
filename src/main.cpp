@@ -8,7 +8,7 @@
 using namespace std;
 
 GLMatrices Matrices;
-GLuint     programID;
+GLuint     ProgramID,textureProgramID;
 GLFWwindow *window;
 
 /**************************
@@ -21,8 +21,8 @@ Monster monsters;
 Boat boat;
 Sea sea;
 vector<Sphere> sphere;
-vector<Cube> barrels;
-Cube rocks[num_rocks];
+vector<CubeTextured> barrels;
+CubeTextured rocks[num_rocks];
 
 
 int boat_health = 100,score = 0;
@@ -31,7 +31,9 @@ float eye_x,eye_y,eye_z;
 float target_x,target_y,target_z;
 float camera_rotation_angle = 95.0;
 // Check which camera view is present
-bool camera_follower = true,camera_top_view=false;
+bool camera_follower = true,camera_top_view=false,camera_tower = false,camera_fps=false,camera_helicopter=false;
+// Check if click or not
+bool clk = false;
 // Sphere hold to check whether fireball is on the boat
 // boost to activate boost once provided in a gift
 bool sphere_hold = false, boost_use = false;
@@ -74,13 +76,60 @@ void draw() {
 
 	}
 
+	else if (camera_tower == true){
+		target_x = boat.position.x;
+		target_y = boat.position.y;
+		target_z = boat.position.z;
+
+
+		eye_x = 40 + 10*cos(camera_rotation_angle*M_PI/180.0f);
+		eye_y = 45;
+		eye_z = 40 + 10*sin(camera_rotation_angle*M_PI/180.0f);
+
+	}
+
+	else if(camera_fps == true){
+		camera_rotation_angle = -boat.rotation ;
+
+		target_x = boat.position.x + 10.0f*sin(camera_rotation_angle*M_PI/180.0f);
+		target_y = boat.position.y;
+		target_z = boat.position.z - 10.0f*cos(camera_rotation_angle*M_PI/180.0f);
+
+
+		eye_x = boat.position.x + 4.0f*sin(camera_rotation_angle*M_PI/180.0f);
+		eye_y = boat.position.y + 5.0f;
+		eye_z = boat.position.z - 4.0f*cos(camera_rotation_angle*M_PI/180.0f);
+
+
+	}
+
+
+	else if(camera_helicopter == true){
+
+
+		target_x = 0.0f;
+		target_y = 0.0f;
+		target_z = 0.0f;
+		// camera_rotation_angle = -boat.rotation + 95;
+
+		// eye_x += target_x;
+		// eye_z += 10.f;
+		mouseuse(window,1600,1600,&eye_x,&eye_z);
+
+		eye_y =  20;
+
+
+	}
+
+	else
+		printf("No camera View Selected\n");
+
 
 	// clear the color and depth in the frame buffer
 	glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// use the loaded shader program
 	// Don't change unless you know what you are doing
-	glUseProgram (programID);
 
 	// Eye - Location of camera. Don't change unless you are sure!!
 	glm::vec3 eye (eye_x,eye_y,eye_z);
@@ -112,12 +161,13 @@ void draw() {
 	for (s = sphere.begin(); s < sphere.end(); ++s)
 		s->draw(VP);
 
-	vector<Cube> :: iterator b;
+	vector<CubeTextured> :: iterator b;
 	for (b = barrels.begin(); b < barrels.end(); ++b)
 		b->draw(VP);
 
 	for (int i = 0; i < num_rocks; ++i)
 		rocks[i].draw(VP);
+
 
 	
 }
@@ -144,18 +194,19 @@ void tick_input(GLFWwindow *window) {
 	// Camera Views
 	int t   = glfwGetKey(window, GLFW_KEY_T);
 	int u   = glfwGetKey(window, GLFW_KEY_U);
+	int y   = glfwGetKey(window, GLFW_KEY_Y);
+	int i   = glfwGetKey(window, GLFW_KEY_I);
+	int h   = glfwGetKey(window, GLFW_KEY_H);
 
-	// if(left){
-	// 	rect.position.x += 0.1;
-	// 	// camera_rotation_angle +=1;
-	// }
+	if(left){
+		camera_rotation_angle +=1;
+	}
 
 
-	// if(right){
-	// 	rect.position.x -= 0.1;
+	if(right){
 
-	// 	// camera_rotation_angle -=1;
-	// }
+		camera_rotation_angle -=1;
+	}
 
 
 	// if(up){
@@ -171,11 +222,13 @@ void tick_input(GLFWwindow *window) {
 
 
 	if(w){
-		boat.speed -= 0.005;
+		if(boat.speed > -10.f) 
+			boat.speed -= 0.005;
 	}
 
 	else if(s){
-		boat.speed += 0.005;
+		if(boat.speed < 10.f) 
+			boat.speed += 0.005;
 	}
 
 	else {
@@ -205,16 +258,55 @@ void tick_input(GLFWwindow *window) {
 	if(t){
 		camera_top_view = true;
 		camera_follower = false;
+		camera_tower = false;
+		camera_fps = false;
+		camera_helicopter = false;
 
 	}
 
 	if(u){
 		camera_follower = true;
 		camera_top_view = false;
+		camera_tower = false;
+		camera_fps = false;
+		camera_helicopter = false;
+
 
 	}
 
+	if(y){
+		camera_tower = true;		
+		camera_follower = false;
+		camera_top_view = false;
+		camera_fps = false;
+		camera_helicopter = false;
+
+	}
+
+	if(i){
+		camera_fps = true;
+		camera_tower = false;		
+		camera_follower = false;
+		camera_top_view = false;
+		camera_helicopter = false;
+	}
+
+	if(h){
+		camera_helicopter = true;
+		camera_fps = false;
+		camera_tower = false;		
+		camera_follower = false;
+		camera_top_view = false;
+	}
+
+
 	if(f && sphere_hold == false){
+
+
+		pthread_t cannon_sound;
+		char cannon_filename[] = "../assets/fireball_shoot.mp3"; 
+		pthread_create(&cannon_sound,NULL,play_audio,(void*)cannon_filename); 
+
 		sphere_hold = true;
 		Sphere new_sphere = Sphere( boat.position.x ,boat.position.y + 1,boat.position.z -1, COLOR_BLACK);
 		new_sphere.speed = 1.0f - boat.speed;
@@ -247,7 +339,7 @@ void tick_elements() {
 
 	monsters.tick(boat.position.x, boat.position.z);
 	
-	boat.tick(wind);
+	boat.tick();
 	sea.tick();
 
 	// Move each ball and erase them if they have reached the bottom
@@ -256,7 +348,7 @@ void tick_elements() {
 		if(s->tick())
 			sphere.erase(s);
 
-	sea.set_position(boat.position.x,boat.position.z);
+	// sea.set_position(boat.position.x,boat.position.z);
 
 
 }
@@ -273,10 +365,16 @@ void collision_function(){
 	// Check Monster collision with fireball or boat
 
 	// Collision with Barrels 
-	vector <Cube> ::iterator bar;
+	vector <CubeTextured> ::iterator bar;
 	for(bar = barrels.begin(); bar < barrels.end(); bar++)
 	if(detect_collision(boat.bounding_box(),bar->bounding_box()))
 		{
+
+			printf("Playing sound\n");
+			pthread_t barrel_hit;
+			char barrel_filename[] = "../assets/open_barrel.mp3"; 
+			pthread_create(&barrel_hit,NULL,play_audio,(void*)barrel_filename); 
+
 			score += 10;
 			printf("Hit a Barrel Score:%d\n",score);
 			barrels.erase(bar);
@@ -303,6 +401,10 @@ void collision_function(){
 		for(it = monsters.prism.begin(); it < monsters.prism.end(); it++)
 		if(detect_collision(s->bounding_box(),it->bounding_box()))
 			{
+				pthread_t monster_hit;
+				char monster_filename[] = "../assets/monster_hit.mp3"; 
+				pthread_create(&monster_hit,NULL,play_audio,(void*)monster_filename); 
+
 				score += 100;
 				printf("Fireball Hit Score:%d\n",score);
 				monsters.kill(it);
@@ -344,24 +446,31 @@ void initGL(GLFWwindow *window, int width, int height) {
 
 	boat       = Boat(0, 0, COLOR_ORANGE);
 	
-	monsters    = Monster(COLOR_RED);
+	monsters    = Monster(COLOR_SHARK_FIN);
 
 	sea        = Sea( 0, 0, COLOR_BLUE);
 
 	// Barrels
+    GLuint textureID = createTexture("../images/barrel.jpg");
 	for(int i=0;i<num_barrels;i++)
-		barrels.push_back(Cube(rand()%500 -250,0,rand()%500 -250,10,5,5,COLOR_BROWN));
+		barrels.push_back(CubeTextured(rand()%500 -250,0,rand()%500 -250,10,5,5,textureID));
 
 	// Rocks
+    GLuint rockTextureID = createTexture("../images/rock.jpg");
+
 	for (int i = 0; i < num_rocks; ++i)
-		rocks[i] = Cube(5*(rand()%200 -100),0,5*(rand()%200 -100),rand()%30 + 10,rand()%30 ,rand()%30+ 10,COLOR_GREY);
+		rocks[i] = CubeTextured(5*(rand()%200 -100),0,5*(rand()%200 -100),rand()%30 + 10,rand()%30 ,rand()%30+ 10,rockTextureID);
+
+
+	textureProgramID = LoadShaders( "TextureRender.vert", "TextureRender.frag" );
+	Matrices.TexMatrixID = glGetUniformLocation(textureProgramID, "MVP");
 
 
 
 	// Create and compile our GLSL program from the shaders
-	programID = LoadShaders("Sample_GL.vert", "Sample_GL.frag");
+	ProgramID = LoadShaders("Sample_GL.vert", "Sample_GL.frag");
 	// Get a handle for our "MVP" uniform
-	Matrices.MatrixID = glGetUniformLocation(programID, "MVP");
+	Matrices.MatrixID = glGetUniformLocation(ProgramID, "MVP");
 
 
 	reshapeWindow (window, width, height);
@@ -379,15 +488,25 @@ void initGL(GLFWwindow *window, int width, int height) {
 	cout << "GLSL: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << endl;
 }
 
-
 int main(int argc, char **argv) {
 	srand(time(0));
 	int width  = 1600;
 	int height = 1600;
 
+
 	window = initGLFW(width, height);
 
+
 	initGL (window, width, height);
+
+	// Start the audio remix
+	pthread_t background_sound;
+
+	char sound_filename[] = "../assets/background.mp3"; 
+	pthread_create(&background_sound,NULL,play_audio,(void*)sound_filename); 
+
+	// Check for opengl error
+	
 
 	/* Draw in loop */
 	for (int t=0;!glfwWindowShouldClose(window);) {
@@ -399,14 +518,13 @@ int main(int argc, char **argv) {
 			if(boat_health <= 0)
 				break;
 
-			printf("%d\n",(t%180 -90) );
-			wind = (t%30 -15);
 			
 			// Time for things to recharge
 			if(t%50 == 0)
 			{	
 				sphere_hold = false;
 				boost_use = true;
+				wind = rand()%180;
 			}
 
 
@@ -435,6 +553,9 @@ int main(int argc, char **argv) {
 	}
 
 	quit(window);
+
+	pthread_join(background_sound, NULL);
+
 }
 
 bool detect_collision(bounding_box_t a, bounding_box_t b) {

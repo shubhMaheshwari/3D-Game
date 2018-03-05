@@ -9,26 +9,31 @@ Boat::Boat(float x, float z, color_t color) {
     this->speed = 0;
     this->yspeed = 0;
 
+
+    GLuint boatTextureID = createTexture("../images/boat.jpg");    
     // left plank
-    this->plank[0] =  Cube(-4, 0,0, 0.4,8,12   ,color);
+    this->plank[0] =  CubeTextured(-4, 0,0, 0.4,8,12   ,boatTextureID);
     // right plank
-    this->plank[1] =  Cube( 4, 0,0, 0.4,8,12   ,color);
+    this->plank[1] =  CubeTextured( 4, 0,0, 0.4,8,12   ,boatTextureID);
     // bottom plank 
-    this->plank[2] =  Cube( 0, 1,0, 7.6,0.4,12 ,color);
+    this->plank[2] =  CubeTextured( 0, 1,0, 7.6,0.4,12 ,boatTextureID);
     // back plank
-    this->plank[3] =   Cube( 0, 0,6, 7.6,8,0.4 ,color);
+    this->plank[3] =   CubeTextured( 0, 0,6, 7.6,8,0.4 ,boatTextureID);
     // front head 1
-    this->plank[4] =   Cube(2,0, -8 ,0.4,8,8, color);
+    this->plank[4] =   CubeTextured(2,0, -8 ,0.4,8,8, boatTextureID);
     this->plank[4].rotation = 30;
     // front head 2
-    this->plank[5] =   Cube(-2,0, -8 ,0.4,8,8, color);;
+    this->plank[5] =   CubeTextured(-2,0, -8 ,0.4,8,8, boatTextureID);;
     this->plank[5].rotation = -30;
 
-    this->sail =  Rectangle(0,7,-0.5,6,18,COLOR_WHITE);
-    this->sail.rotation = 90;
+    GLuint sailTextureID = createTexture("../images/barrel.jpg");
+    this->sail =  Rectangle(0,7,-0.5,6,17, sailTextureID);
+    // this->sail.rotation = 90;
 }
 
 void Boat::draw(glm::mat4 VP) {
+    glUseProgram (ProgramID);
+
     Matrices.model = glm::mat4(1.0f);
     glm::mat4 translate = glm::translate (this->position);    // glTranslatef
     glm::mat4 rotate    = glm::rotate((float) (this->rotation * M_PI / 180.0f), glm::vec3(0, 1, 0));
@@ -43,7 +48,7 @@ void Boat::draw(glm::mat4 VP) {
     for(int i=0;i<6;i++)
         plank[i].draw(MVP);
 
-    sail.draw(MVP);
+    // sail.draw(MVP);
 
 }
 
@@ -51,7 +56,7 @@ void Boat::set_position(float x, float y) {
     this->position = glm::vec3(x, y, 0);
 }
 
-void Boat::tick(float wind){
+void Boat::tick(){
 
     this->position.y += yspeed;
 
@@ -66,9 +71,17 @@ void Boat::tick(float wind){
         this->jumping = false;
     }
 
-    // Use wind to update sail
+    // Use boat's direction to update sail
+    sail.rotation = (int)(this->rotation/5)%60;
+    
+    if (sail.rotation < -15.0f)
+        sail.rotation = -15.0f;
 
-    sail.rotation = wind;
+    else if (sail.rotation > 15.0f)
+        sail.rotation = 15.0f;
+
+
+
 
 }
 

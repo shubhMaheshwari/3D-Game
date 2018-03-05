@@ -23,6 +23,9 @@ if (APPLE)
   target_link_libraries(${PROJECT_NAME} "-framework OpenGL")
 endif()
 
+# find_package(Threads REQUIRED)
+target_link_libraries(${PROJECT_NAME} pthread)
+target_link_libraries(${PROJECT_NAME} SOIL)
 
 pkg_check_modules(AO REQUIRED ao)
 include_directories(${AO_INCLUDE_DIRS})
@@ -34,4 +37,7 @@ target_link_libraries (${PROJECT_NAME} ${LIBMPG123_LIBRARIES})
 
 configure_file(src/Sample_GL.vert Sample_GL.vert COPYONLY)
 configure_file(src/Sample_GL.frag Sample_GL.frag COPYONLY)
+
+configure_file(src/TextureRender.vert TextureRender.vert COPYONLY)
+configure_file(src/TextureRender.frag TextureRender.frag COPYONLY)
 # configure_file(assets/song.mp3 assets/song.mp3 COPYONLY)
