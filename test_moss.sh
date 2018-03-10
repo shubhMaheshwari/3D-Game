@@ -8,4 +8,4 @@ if [ ! -d "$old_dir" ]; then
 fi
 
 
-./moss src/* ./old_game/Opengl-3d/src/*
+./moss -d src/* ./old_game/Opengl-3d/src/*
