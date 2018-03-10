@@ -7,7 +7,7 @@
 class Sea {
 public:
     Sea() {}
-    Sea(float x, float y, color_t color);
+    Sea(float x, float y, GLuint textureID);
     glm::vec3 position;
     float rotation;
     float yspeed;

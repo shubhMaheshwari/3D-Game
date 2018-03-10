@@ -1,35 +1,55 @@
 #include "main.h"
 #include "sea.h"
 
-Sea::Sea(float x, float y, color_t color) {
+Sea::Sea(float x, float y, GLuint textureID) {
     this->position = glm::vec3(x, y+0.25, 0);
     this->rotation = 0;
     this->yspeed = 0.0;
     // Our vertices. Three consecutive floats give a 3D vertex; Three consecutive vertices give a triangle.
     // A Sea has 6 faces with 2 triangles each, so this makes 6*2=12 triangles, and 12*3 vertices
     static const GLfloat vertex_buffer_data[] = {
-        -1000.0,0.0, 1000.0,
-        1000.0, 0.0, 1000.0,
-        1000.0, 0.0, -1000.0,
+        -10000.0,0.0, 10000.0,
+        10000.0, 0.0, 10000.0,
+        10000.0, 0.0, -10000.0,
 
-        1000.0, 0.0, -1000.0,
-        -1000.0,0.0, -1000.0,
-        -1000.0,0.0, 1000.0
+        10000.0, 0.0, -10000.0,
+        -10000.0,0.0, -10000.0,
+        -10000.0,0.0, 10000.0
     };
 
-    GLfloat texture_buffer_data [] = {
-        0,100, // TexCoord 1000 - bot left
-        100,100, // TexCoord 100 - bot right
-        100,0, // TexCoord 3 - top right
+    if(y > 100)
+    {
+        // For sky 
+        GLfloat texture_buffer_data[] = {
+        0,1, // TexCoord 1 - bot left
+        1,1, // TexCoord 2 - bot right
+        1,0, // TexCoord 3 - top right
 
-        100,0, // TexCoord 3 - top right
+        1,0, // TexCoord 3 - top right
         0,0, // TexCoord 4 - top left
-        0,100  // TexCoord 1 - bot left
-    };
-
-    GLuint textureID = createTexture("../images/sea1.jpg");
+        0,1,  // TexCoord 1 - bot left
+        };
+        
     this->object = create3DTexturedObject(GL_TRIANGLES, 6, vertex_buffer_data, texture_buffer_data, textureID, GL_FILL);
 
+
+    }
+    
+    else{
+                // For sky
+    GLfloat texture_buffer_data [] = {
+            0,1000, // TexCoord 10000 - bot left
+            1000,1000, // TexCoord 1000 - bot right
+            1000,0, // TexCoord 3 - top right
+
+            1000,0, // TexCoord 3 - top right
+            0,0, // TexCoord 4 - top left
+            0,1000  // TexCoord 1 - bot left
+        };    
+    
+
+    this->object = create3DTexturedObject(GL_TRIANGLES, 6, vertex_buffer_data, texture_buffer_data, textureID, GL_FILL);    
+    }
 
 }
 

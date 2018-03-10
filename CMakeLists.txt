@@ -40,4 +40,6 @@ configure_file(src/Sample_GL.frag Sample_GL.frag COPYONLY)
 
 configure_file(src/TextureRender.vert TextureRender.vert COPYONLY)
 configure_file(src/TextureRender.frag TextureRender.frag COPYONLY)
-# configure_file(assets/song.mp3 assets/song.mp3 COPYONLY)
+
+configure_file(src/TextVertexShader.vertexshader TextVertexShader.vertexshader COPYONLY)
+configure_file(src/TextVertexShader.fragmentshader TextVertexShader.fragmentshader COPYONLY)

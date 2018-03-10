@@ -1,6 +1,7 @@
 #ifndef MAIN_H
 #define MAIN_H
 
+
 #include <iostream>
 #include <cmath>
 #include <fstream>
@@ -18,6 +19,7 @@
 #include <ao/ao.h>
 #include <mpg123.h>
 
+
 struct color_t {
     int r;
     int g;
@@ -34,7 +36,7 @@ struct VAO* create3DTexturedObject(GLenum primitive_mode, int numVertices, const
 void       draw3DObject(struct VAO *vao);
 void draw3DTexturedObject (struct VAO* vao);
 GLuint createTexture (const char* filename);
-GLuint loadBMP_custom(const char * imagepath);
+GLuint loadDDS(const char * imagepath);
  
 // input.cpp
 void keyboard(GLFWwindow *window, int key, int scancode, int action, int mods);
@@ -90,10 +92,11 @@ struct bounding_box_t {
 // main.cpp
 bool detect_collision(bounding_box_t a, bounding_box_t b);
 void get_gift();
+void display_score(int time);
 
 extern float screen_zoom, screen_center_x, screen_center_y;
 extern int boat_health,score;
-extern bool clk;
+extern bool clk,pause;
 // ---- Colors ----
 extern const color_t COLOR_RED;
 extern const color_t COLOR_ORANGE;

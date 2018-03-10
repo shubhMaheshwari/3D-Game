@@ -27,3 +27,10 @@ void Monster::tick(float x, float z){
 void Monster::kill(vector <Prism> :: iterator ind){
 	this->prism.erase(ind);
 }
+
+void Monster::add_enemy(int count,float x,float z, color_t color){
+
+    for(int i=0;i<count;i++)
+        this->prism.push_back(Prism(rand()%200 - 100 + x ,rand()%200 -100 + z, color));
+
+}

@@ -11,7 +11,7 @@ public:
     glm::vec3 position;
     glm::vec3 speed;
     glm::vec3 dimensions;
-    float rotation;
+    float rotation,roll;
     void draw(glm::mat4 VP);
     void set_position(float x, float y);
     void tick();
@@ -53,6 +53,17 @@ private:
 	VAO *object;
 };
 
+class Arrow {
+public:
+    Arrow() {}
+    Arrow(float x, float z, color_t color);
+    glm::vec3 position;
+    float rotation;
+    void draw(glm::mat4 VP);
+
+private:
+    VAO *object;
+};
 
 
 class Sphere {
@@ -72,13 +83,14 @@ private:
     VAO *object;
 };
 
-class Rectangle {
+class Sail {
 public:
-    Rectangle() {}
-    Rectangle(float x, float y,float z,float length, float height, GLuint textureID);
+    Sail() {}
+    Sail(float x, float y,float z,float length, float height, GLuint textureID);
     glm::vec3 position;
     glm::vec2 dimensions;
     float rotation;
+    float roll;
     void draw(glm::mat4 VP);
     void set_position(float x, float y ,float z);
     bool tick();
@@ -87,5 +99,32 @@ private:
     VAO *object;
 };
 
+
+class Circle {
+public:
+    Circle() {}
+    Circle(float x, float y,float z,float radius, color_t color);
+    glm::vec3 position;
+    float rotation;
+    void draw(glm::mat4 VP);
+    void set_position(float x, float y ,float z);
+    bool tick();
+    double speed;
+    double yspeed;
+    float radius;
+private:
+    VAO *object;
+};
+
+class VerticalRectangle {
+public:
+    VerticalRectangle() {}
+    VerticalRectangle(float x,float z,  GLuint textureID);
+    glm::vec3 position;
+    float rotation;
+    void draw(glm::mat4 VP);
+private:
+    VAO *object;
+};
 
 #endif // OBJECTS

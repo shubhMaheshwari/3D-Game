@@ -101,7 +101,6 @@ void *play_audio(void *ptr){
     mpg123_close(mh);
     mpg123_delete(mh);
 
-    printf("Finished Playing sound\n");
 
     return NULL;
 }

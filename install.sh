@@ -1,0 +1,1 @@
+sudo apt-get install libao-dev libmpg123-dev libsoil-dev

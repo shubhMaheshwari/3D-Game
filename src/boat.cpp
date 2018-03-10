@@ -2,13 +2,14 @@
 #include "main.h"
 // #include "cube.h"
 Boat::Boat(float x, float z, color_t color) {
-    this->position = glm::vec3(x, 0, z);
+    this->position = glm::vec3(x, 2, z);
     this->rotation = 0;
     this->roll = 0;
     this->jumping = false;
     this->speed = 0;
     this->yspeed = 0;
-
+    this->sail_on = false;
+    this->on_water = 0.0;
 
     GLuint boatTextureID = createTexture("../images/boat.jpg");    
     // left plank
@@ -26,9 +27,19 @@ Boat::Boat(float x, float z, color_t color) {
     this->plank[5] =   CubeTextured(-2,0, -8 ,0.4,8,8, boatTextureID);;
     this->plank[5].rotation = -30;
 
-    GLuint sailTextureID = createTexture("../images/barrel.jpg");
-    this->sail =  Rectangle(0,7,-0.5,6,17, sailTextureID);
-    // this->sail.rotation = 90;
+    // Poll
+    this->plank[6] =   CubeTextured(0,6, 0 ,0.4,9,0.4, boatTextureID);
+    // Cannon
+    this->plank[7] =   CubeTextured(0,3, -5 ,4,4,8, boatTextureID);
+
+    GLuint sailTextureID = createTexture("../images/sail.jpeg");
+    this->sail =  Sail(0,6.0,0.0,6,17, sailTextureID);
+    this->sail.rotation = 90;
+
+    this->arrow = Arrow(0,10,COLOR_ORANGE);
+
+    this->man = Man(0,2,COLOR_GREEN);
+
 }
 
 void Boat::draw(glm::mat4 VP) {
@@ -45,40 +56,54 @@ void Boat::draw(glm::mat4 VP) {
     glUniformMatrix4fv(Matrices.MatrixID, 1, GL_FALSE, &MVP[0][0]);
     // draw3DObject(this->object);
     
-    for(int i=0;i<6;i++)
-        plank[i].draw(MVP);
+    if(this->on_water == 0.0){
+        for(int i=0;i<8;i++)
+            plank[i].draw(MVP);
 
-    // sail.draw(MVP);
+        if (sail.rotation < 60 && sail.rotation > -60 && sail_on)
+            sail.draw(MVP);
+
+        arrow.draw(MVP);
+    }
+
+    man.draw(MVP);
 
 }
 
-void Boat::set_position(float x, float y) {
-    this->position = glm::vec3(x, y, 0);
+void Boat::set_position(float x, float z) {
+    this->position = glm::vec3(x, 0, z);
 }
 
-void Boat::tick(){
+void Boat::tick(float wind){
+
+
+    // Use boat's direction to update sail
+    arrow.rotation = wind - this->rotation;
+    sail.rotation = this->rotation -wind;
+
+    // if(speed < -1)
+    //     this->roll = 5*sin(rotation*M_PI/180.0f);
+    // else
+    //     this->roll = 0;
+    // If sail is on add more speed
+    if (sail.rotation < 60 && sail.rotation > -60 && sail_on)
+        this->speed -= 0.003;
 
     this->position.y += yspeed;
 
     this->position.z += speed*cos(rotation*M_PI/180.0f);   
-    this->position.x += speed*sin(rotation*M_PI/180.0f);   
+    this->position.x += speed*sin(rotation*M_PI/180.0f);
 
-    if(this->position.y > 0)
+
+
+
+    if(this->position.y > this->on_water)
         yspeed -= 0.006;
     else{
-        this->position.y = 0;
+        this->position.y = this->on_water;
         yspeed = 0;
         this->jumping = false;
     }
-
-    // Use boat's direction to update sail
-    sail.rotation = (int)(this->rotation/5)%60;
-    
-    if (sail.rotation < -15.0f)
-        sail.rotation = -15.0f;
-
-    else if (sail.rotation > 15.0f)
-        sail.rotation = 15.0f;
 
 
 

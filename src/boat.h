@@ -1,5 +1,6 @@
 #include "main.h"
 #include "objects.h"
+#include "man.h"
 
 #ifndef BOAT_H
 #define BOAT_H
@@ -13,16 +14,20 @@ public:
     float rotation;
     float roll;
     void draw(glm::mat4 VP);
-    void set_position(float x, float y);
-    void tick();
+    void set_position(float x, float z);
+    void tick(float wind);
     double speed;
     double yspeed;
     bool jumping;
+    bool sail_on;
+    float on_water;
     bounding_box_t bounding_box();
 
 
-    CubeTextured plank[6];
-    Rectangle sail;
+    CubeTextured plank[8];
+    Sail sail;
+    Arrow arrow;
+    Man man;
 };
 
 

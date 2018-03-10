@@ -52,7 +52,9 @@ void keyboard(GLFWwindow *window, int key, int scancode, int action, int mods) {
 /* Executed for character input (like in text boxes) */
 void keyboardChar(GLFWwindow *window, unsigned int key) {
     switch (key) {
-    case 'Q':
+    case 'p':
+        pause = !pause;
+        break;
     case 'q':
         quit(window);
         break;

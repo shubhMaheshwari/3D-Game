@@ -14,6 +14,7 @@ public:
     void tick(float x, float z);
     std::vector<Prism> prism;
     void kill(std::vector <Prism> :: iterator ind);
+    void add_enemy(int count, float x,float z,color_t color);
     
 };
 
